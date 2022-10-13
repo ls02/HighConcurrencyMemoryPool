@@ -1,5 +1,6 @@
 #include "Common.h"
 #include "ThreadCache.h"
+#include "CentralCache.h"
 
 void* ThreadCache::Allocate(size_t size)
 {
@@ -12,9 +13,9 @@ void* ThreadCache::Allocate(size_t size)
 	size_t index = SizeClass::Index(size);
 
 	//如果不为空说明里面还有空间，可以先使用自由链表里面的空间
-	if (!_freeList[index].Empty())
+	if (!_freeLists[index].Empty())
 	{
-		return _freeList[index].Pop();
+		return _freeLists[index].Pop();
 	}
 	else
 	{
@@ -23,11 +24,6 @@ void* ThreadCache::Allocate(size_t size)
 	}
 }
 
-/**
- * @brief 释放线程缓存的内粗资源，把该资源放到自由链表里面链接起来
- * @param ptr 需要释放资源的地址
- * @param size 释放资源的空间大小
-*/
 void ThreadCache::Deallocate(void* ptr, size_t size)
 {
 	assert(ptr);
@@ -35,17 +31,43 @@ void ThreadCache::Deallocate(void* ptr, size_t size)
 
 	size_t index = SizeClass::Index(size);
 	// 找对映射的自由链表桶，对象插入进入
-	_freeList[index].Push(ptr);
+	_freeLists[index].Push(ptr);
 }
 
 
-/**
- * @brief 中心缓存是线程缓存的下一层，当线程缓存没内存空间的时候需要向下一层申请
- * @param index 要申请缓存的所在哈希桶位置
- * @param size 申请多大空间
- * @return 返回申请好的空间
-*/
 void* ThreadCache::FetchFromCentralCache(size_t index, size_t size)
 {
+	// 慢开始反馈调节算法
+// 1、最开始不会一次向central cache一次批量要太多，因为要太多了可能用不完
+// 2、如果你不要这个size大小内存需求，那么batchNum就会不断增长，直到上限
+// 3、size越大，一次向central cache要的batchNum就越小
+// 4、size越小，一次向central cache要的batchNum就越大
+	size_t batchNum = std::min(_freeLists[index].MaxSize(), SizeClass::NumMoveSize(size));
+
+	if (_freeLists[index].MaxSize() == batchNum)
+	{
+		_freeLists[index].MaxSize() += 1;
+	}
+
+	//输出型参数，用来保存获取到的地址
+	void* start = nullptr;
+	void* end = nullptr;
+
+	size_t actualNum = CentralCache::GetInstance()->FetchRangeObj(start, end, batchNum, size);
+	assert(actualNum > 0);
+
+	if (actualNum == 1)
+	{
+		assert(start == end);
+
+		return start;
+	}
+	else
+	{
+		_freeLists[index].PushRange(NextObj(start), end);
+
+		return start;
+	}
+
 	return nullptr;
 }

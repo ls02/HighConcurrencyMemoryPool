@@ -33,7 +33,7 @@ public:
 private:
 
 	// 用哈希桶映射每个自由链表的位置
-	FreeList _freeList[NFREELIST];
+	FreeList _freeLists[NFREELIST];
 };
 
 

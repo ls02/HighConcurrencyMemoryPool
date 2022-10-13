@@ -9,6 +9,17 @@
 #include <thread>
 #include <assert.h>
 #include <ctime>
+#include <mutex>
+#include <algorithm>
+
+// 用于适配不同环境下的页数大小
+#ifdef _WIN64
+	typedef unsigned long long PAGE_ID;
+#elif _WIN32
+	typedef size_t PAGE_ID;
+#else
+	// linux
+#endif
 
 /**
  * @brief 这个值是表示能申请空间的最大值，如果超过这个值将申请失败
@@ -58,13 +69,31 @@ public:
 		return obj;
 	}
 
+	/**
+	 * @brief 头插，一块自由链表插入该链表头部
+	 * @param start 自由链表的头节点
+	 * @param end 自由链表的尾节点
+	*/
+	void PushRange(void* start, void* end)
+	{
+		//建立新的链接
+		NextObj(end) = _freeList;
+		_freeList = start;
+	}
+
 	bool Empty()
 	{
 		return _freeList == nullptr;
 	}
 
+	size_t& MaxSize()
+	{
+		return _maxSize;
+	}
+
 private:
 	void* _freeList = nullptr;
+	size_t _maxSize = 1;
 };
 
 // 计算对象大小的对齐映射规则
@@ -159,7 +188,82 @@ public:
 
 		return -1;
 	}
+
+	/**
+	 * @brief 一次thread cache从中心缓存获取多少个，限制最大值和最小值
+	 * @param size 申请空间的大小
+	 * @return 返回所需要的span个数
+	*/
+	static size_t NumMoveSize(size_t size)
+	{
+		assert(size > 0);
+
+		// [2, 512]，一次批量移动多少个对象的(慢启动)上限值
+		// 小对象一次批量上限高
+		// 小对象一次批量上限低
+		int num = MAX_BYTES / size;
+		if (num < 2)
+			num = 2;
+
+		if (num > 512)
+			num = 512;
+
+		return num;
+	}
 };
 
+// 管理多个连续页大块内存跨度结构
+struct Span
+{
+	PAGE_ID _pageId = 0;//大块内存起始页的页号
+	size_t _n = 0;// 页的数量
+
+	Span* _next = nullptr;	// 双向链表结构
+	Span* _prev = nullptr;
+
+	size_t _useCount = 0;	//	切好的小块内存被分配给 Thread Cache的计数
+	void* _freeList = nullptr;	//	切好的小块内存自由链表
+};
+
+//带头双向循环链表
+class SpanList
+{
+public:
+	SpanList()
+	{
+		_head = new Span;
+		_head->_next = _head;
+		_head->_prev = _head;
+	}
+
+	void Insert(Span* pos, Span* newSpan)
+	{
+		assert(pos);
+		assert(newSpan);
+
+		Span* prev = pos->_prev;
+		prev->_next = newSpan;
+		newSpan->_next = pos;
+		newSpan->_prev = prev;
+		pos->_prev = newSpan;
+	}
+	
+	void Erase(Span* pos)
+	{
+		assert(pos);
+		assert(nullptr != pos);
+
+		Span* next = pos->_next;
+		Span* prev = pos->_prev;
+
+		prev->_next = next;
+		next->_prev = prev;
+	}
+private:
+	Span* _head;
+
+public:
+	std::mutex _mtx;//桶锁
+};
 
 #endif // !__COMMON_H__
