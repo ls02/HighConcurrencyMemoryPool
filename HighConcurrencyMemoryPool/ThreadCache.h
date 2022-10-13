@@ -21,10 +21,23 @@ public:
 	 * @param size 释放内存空间的大小
 	*/
 	void Deallocate(void* ptr, size_t size);
+
+	/**
+	 * @brief 中心缓存，当线程缓存里面没有空间了将会向中心缓存申请空间
+	 * @param index 需要知道是那个桶申请的
+	 * @param size 申请空间的大小
+	 * @return 返回申请成功后的空间
+	*/
+	void* FetchFromCentralCache(size_t index, size_t size);
+
 private:
 
 	// 用哈希桶映射每个自由链表的位置
-	FreeList _freeList[];
+	FreeList _freeList[NFREELIST];
 };
+
+
+// TLS thread local storage ,TLS是一个局部线程存储，用来保证每个线程都是不同的pTLShreadCache，这样就不不需要加锁，从而提高并发性能
+static _declspec(thread) ThreadCache* pTLSThreadCache = nullptr;
 
 #endif // !__THREAD_CACHE_H__
