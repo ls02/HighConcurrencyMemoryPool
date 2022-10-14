@@ -12,6 +12,12 @@
 #include <mutex>
 #include <algorithm>
 
+#ifdef _WIN32
+#include <windows.h>
+#else
+	// ...
+#endif
+
 // 用于适配不同环境下的页数大小
 #ifdef _WIN64
 	typedef unsigned long long PAGE_ID;
@@ -29,6 +35,10 @@ static const size_t MAX_BYTES = 256 * 1024;
 //该值是用来表示哈希桶的最大桶数，也就是说这个哈希桶最多有208个桶
 static const size_t NFREELIST = 208;
 
+//PageCache的桶的个数
+static const size_t NPAGES = 129;
+static const size_t PAGE_SHIFT = 13;
+
 /**
  * @brief 用于获取一个对象里面存放的地址
  * @param obj 需要获取地址的对象
@@ -37,6 +47,21 @@ static const size_t NFREELIST = 208;
 static void*& NextObj(void* obj)
 {
 	return *(void**)obj;
+}
+
+// 直接去堆上按页申请空间
+inline static void* SystemAlloc(size_t kpage)
+{
+#ifdef _WIN32
+	void* ptr = VirtualAlloc(0, kpage << 13, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+#else
+	// linux下brk mmap等
+#endif
+
+	if (ptr == nullptr)
+		throw std::bad_alloc();
+
+	return ptr;
 }
 
 //自由连表用来管理释放后的内存资源
@@ -210,6 +235,21 @@ public:
 
 		return num;
 	}
+
+	// 计算一次向系统获取几个页
+	// 单个对象 8byte
+	// 单个对象 256KB
+	static size_t NumMovePage(size_t size)
+	{
+		size_t num = NumMoveSize(size);
+		size_t npage = num * size;
+
+		npage >>= PAGE_SHIFT;
+		if (npage == 0)
+			npage = 1;
+
+		return npage;
+	}
 };
 
 // 管理多个连续页大块内存跨度结构
@@ -258,6 +298,33 @@ public:
 
 		prev->_next = next;
 		next->_prev = prev;
+	}
+
+	void PushFront(Span* span)
+	{
+		Insert(Begin(), span);
+	}
+
+	Span* PopFront()
+	{
+		Span* front = _head->_next;
+		Erase(front);
+		return front;
+	}
+
+	bool Empty()
+	{
+		return _head->_next == _head;
+	}
+
+	Span* Begin()
+	{
+		return _head->_next;
+	}
+
+	Span* End()
+	{
+		return _head;
 	}
 private:
 	Span* _head;
