@@ -59,5 +59,6 @@ int main(void)
 	//TLSTest();
 	//TLSTest();
 	//TestConcurrentAlloc1();
+	//TestConcurrentAlloc1();
 	TestConcurrentAlloc2();
 }
