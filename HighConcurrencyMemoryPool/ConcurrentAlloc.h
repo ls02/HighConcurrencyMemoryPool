@@ -7,6 +7,11 @@
 #include "Common.h"
 #include "ThreadCache.h"
 
+/**
+ * @brief 申请空间
+ * @param size 申请空间大小 
+ * @return 返回申请好的空间
+*/
 static void* ConcurrentAlloc(size_t size)
 {
 	// 通过TLS 每个线程无锁的获取自己的专属的ThreadCache对象
@@ -24,6 +29,11 @@ static void* ConcurrentAlloc(size_t size)
 	return pTLSThreadCache->Allocate(size);
 }
 
+/**
+ * @brief 释放空间
+ * @param ptr 释放空间的地址
+ * @param size 释放多大
+*/
 static void ConcurrentFree(void* ptr, size_t size)
 {
 	//如果需要释放资源，那么它一定申请过资源，为了防止没申请资源就来释放所以加了个断言判断一下
