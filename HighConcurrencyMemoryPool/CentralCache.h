@@ -4,7 +4,7 @@
 
 #include "Common.h"
 
-//单列模式
+//懒汉模式
 class CentralCache
 {
 public:

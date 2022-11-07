@@ -23,7 +23,7 @@ Span* CentralCache::GetOneSpan(SpanList& list, size_t size)
 	// 先把central cache的桶锁解掉，这样如果其他线程释放内存对象回来，不会阻塞
 	list._mtx.unlock();
 
-	// 走到这里说没有空闲span了，只能找page cache要
+	// 走到这里说明没有空闲span了，只能找page cache要
 	PageCache::GetInstance()->_pageMtx.lock();
 	Span* span = PageCache::GetInstance()->NewSpan(SizeClass::NumMovePage(size));
 	PageCache::GetInstance()->_pageMtx.unlock();
@@ -89,6 +89,7 @@ size_t CentralCache::FetchRangeObj(void*& start, void*& end, size_t batchNum, si
 	//断开链接，重新建立新的链接
 	span->_freeList = NextObj(end);
 	NextObj(end) = nullptr;
+	span->_useCount += actualNum;
 
 	//对该桶进行解锁
 	_spanLists[index]._mtx.unlock();
