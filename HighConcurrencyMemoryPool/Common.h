@@ -37,6 +37,8 @@ static const size_t NFREELIST = 208;
 
 //PageCache的桶的个数
 static const size_t NPAGES = 129;
+
+//总数/8kb 就是要的页数
 static const size_t PAGE_SHIFT = 13;
 
 /**
@@ -228,10 +230,14 @@ public:
 		// 小对象一次批量上限低
 		int num = MAX_BYTES / size;
 		if (num < 2)
+		{
 			num = 2;
+		}
 
 		if (num > 512)
+		{
 			num = 512;
+		}
 
 		return num;
 	}
