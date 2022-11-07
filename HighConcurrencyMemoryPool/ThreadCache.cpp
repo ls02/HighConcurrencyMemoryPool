@@ -20,7 +20,7 @@ void* ThreadCache::Allocate(size_t size)
 	else
 	{
 		//如果自由链表里面没空间，那么说明 thread cache里面也没空间了，那么需要向 center cache 申请
-		return FetchFromCentralCache(index, size);
+		return FetchFromCentralCache(index, alignSize);
 	}
 }
 

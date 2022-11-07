@@ -9,14 +9,14 @@ class ThreadCache
 {
 public:
 	/**
-	 * @brief 申请内存空间
+	 * @brief 当前线程申请内存空间
 	 * @param size 申请内存大小
 	 * @return 返回申请好的内存空间
 	*/
 	void* Allocate(size_t size);
 
 	/**
-	 * @brief 释放内存空间
+	 * @brief 当前线程释放内存空间
 	 * @param ptr 要释放内存空间的对象
 	 * @param size 释放内存空间的大小
 	*/
