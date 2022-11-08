@@ -23,6 +23,13 @@ public:
 	void Deallocate(void* ptr, size_t size);
 
 	/**
+	 * @brief 释放对象时，链表过长时，回收到中心缓存
+	 * @param list 要释放的链表
+	 * @param size 释放的大小
+	*/
+	void ListTooLong(FreeList& list, size_t size);
+
+	/**
 	 * @brief 中心缓存，当线程缓存里面没有空间了将会向中心缓存申请空间
 	 * @param index 需要知道是那个桶申请的
 	 * @param size 申请空间的大小
