@@ -96,3 +96,4 @@ size_t CentralCache::FetchRangeObj(void*& start, void*& end, size_t batchNum, si
 
 	return actualNum;
 }
+
