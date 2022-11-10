@@ -79,6 +79,8 @@ public:
 	{
 		NextObj(obj) = _freeList;
 		_freeList = obj;
+
+		++_size;
 	}
 
 	/**
@@ -93,6 +95,8 @@ public:
 		void* obj = _freeList;
 		_freeList = NextObj(obj);
 
+		--_size;
+
 		return obj;
 	}
 
@@ -101,11 +105,35 @@ public:
 	 * @param start 自由链表的头节点
 	 * @param end 自由链表的尾节点
 	*/
-	void PushRange(void* start, void* end)
+	void PushRange(void* start, void* end, size_t n)
 	{
 		//建立新的链接
 		NextObj(end) = _freeList;
 		_freeList = start;
+
+		_size += n;
+	}
+
+	/**
+	 * @brief 头删一块自由链表
+	 * @param start 要删除的起始地址
+	 * @param end   要删除的结尾地址
+	 * @param n 删除的数量
+	*/
+	void PopRange(void*& start, void*& end, size_t n)
+	{
+		assert(n <= _size);
+		start = _freeList;
+		end = start;
+
+		for (size_t i = 0; i < n - 1; i++)
+		{
+			end = NextObj(end);
+		}
+
+		_freeList = NextObj(end);
+		NextObj(end) = nullptr;
+		_size -= n;
 	}
 
 	bool Empty()
@@ -118,9 +146,15 @@ public:
 		return _maxSize;
 	}
 
+	size_t Size()
+	{
+		return _size;
+	}
+
 private:
 	void* _freeList = nullptr;
 	size_t _maxSize = 1;
+	size_t _size = 0;
 };
 
 // 计算对象大小的对齐映射规则
