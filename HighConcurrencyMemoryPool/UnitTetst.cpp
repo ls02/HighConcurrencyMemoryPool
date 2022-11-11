@@ -6,7 +6,7 @@ void Alloc1()
 {
 	for (int i = 0; i < 5; i++)
 	{
-		void* ptr = ConcurrentAlloc(5);
+		void* ptr = ConcurrentAlloc(5000000);
 	}
 }
 
@@ -44,14 +44,25 @@ void TestConcurrentAlloc1()
 
 void TestConcurrentAlloc2()
 {
-	for (size_t i = 0; i < 1024; ++i)
-	{
-		void* p1 = ConcurrentAlloc(6);
-		std::cout << p1 << std::endl;
-	}
+	//for (size_t i = 0; i < 1024; ++i)
+	//{
+	//	void* p1 = ConcurrentAlloc(6);
+	//	std::cout << p1 << std::endl;
+	//}
 
-	void* p2 = ConcurrentAlloc(8);
+	void* p2 = ConcurrentAlloc(200 * 1024);
 	std::cout << p2 << std::endl;
+}
+
+void TestConcurrentAlloc3()
+{
+	void* p1 = ConcurrentAlloc(6);
+	void* p2 = ConcurrentAlloc(3);
+	void* p3 = ConcurrentAlloc(5);
+	void* p4 = ConcurrentAlloc(1);
+	void* p5 = ConcurrentAlloc(3);
+	void* p6 = ConcurrentAlloc(2);
+	void* p7 = ConcurrentAlloc(8);
 }
 
 int main(void)
@@ -60,5 +71,6 @@ int main(void)
 	//TLSTest();
 	//TestConcurrentAlloc1();
 	//TestConcurrentAlloc1();
-	TestConcurrentAlloc2();
+	//TestConcurrentAlloc2();
+	TestConcurrentAlloc3();
 }
