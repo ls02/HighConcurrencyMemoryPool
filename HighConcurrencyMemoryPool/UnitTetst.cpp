@@ -64,6 +64,7 @@ void TestConcurrentAlloc3()
 	void* p6 = ConcurrentAlloc(2);
 	void* p7 = ConcurrentAlloc(8);
 	void* p8 = ConcurrentAlloc(8);
+	void* p9 = ConcurrentAlloc(3);
 }
 
 int main(void)
