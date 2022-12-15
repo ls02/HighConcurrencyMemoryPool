@@ -34,7 +34,6 @@ void TestConcurrentAlloc1()
 	void* p3 = ConcurrentAlloc(1);
 	void* p4 = ConcurrentAlloc(7);
 	void* p5 = ConcurrentAlloc(8);
-	void* p6 = ConcurrentAlloc(8);
 
 	std::cout << p1 << std::endl;
 	std::cout << p2 << std::endl;
