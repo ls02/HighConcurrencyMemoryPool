@@ -40,9 +40,7 @@ void TestConcurrentAlloc1()
 	std::cout << p3 << std::endl;
 	std::cout << p4 << std::endl;
 	std::cout << p5 << std::endl;
-	std::cout << p5 << std::endl;
-	std::cout << p5 << std::endl;
-	std::cout << p5 << std::endl;
+
 }
 
 void TestConcurrentAlloc2()
