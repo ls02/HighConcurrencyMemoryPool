@@ -41,7 +41,7 @@ void TestConcurrentAlloc1()
 	std::cout << p4 << std::endl;
 	std::cout << p5 << std::endl;
 	std::cout << p5 << std::endl;
-
+	std::cout << p5 << std::endl;
 }
 
 void TestConcurrentAlloc2()
@@ -71,4 +71,7 @@ int main(void)
 	//TestConcurrentAlloc1();
 	//TestConcurrentAlloc2();
 	TestConcurrentAlloc3();
+
+
+	return 0;
 }
